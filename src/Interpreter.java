@@ -8,6 +8,8 @@ public class Interpreter {
 	private String m_Tape;		// Tape, program
 	private byte[] m_Mem;		// Program memory
 	private Scanner m_Scanner;	// For user input
+	private Stack<Integer> m_Stack; // Holding loop addresses 
+
 
 	/* Description: Default constructor. 
 	 * @param		N/A
@@ -18,8 +20,27 @@ public class Interpreter {
 		for (int i = 0; i < m_Mem.length; i++) m_Mem[i] = 0;
 		// Setup input
 		m_Scanner = new Scanner(System.in);
+		m_Stack  = new Stack<Integer>();
 
 	}
+
+
+	private void debugTrace(char s, int a, int b, int c){
+		//System.out.printf("Token: %s ip: %d dp: %d m_Mem[dp]: %d\n", s, a, b, c);
+	}
+
+	private void BeginLoop(int ip, int dp){
+		if (m_Mem[dp] == 0){
+			// Find matching ] to jump to
+			while (m_Tape.charAt(++ip) != ']'){
+				// nested loops
+				if (m_Tape.charAt(ip) == '[') 
+					BeginLoop(ip, dp);
+			}
+		}
+
+	}
+
 
 	/* Description: Parses and interprets BrainF*** code. Print commands are
 	 *   sent to command line interface
@@ -31,12 +52,10 @@ public class Interpreter {
 		m_Tape = tape;		
 		int dp = 0;			// data pointer
 		int ip = 0;			// instruction pointer
-		// For keeping track of starting loop indexes
-		Stack<Integer> loopStack = new Stack<Integer>(); 
+
 
 		// Parse through each item in tape
 		for(; ip < m_Tape.length(); ++ip){
-
 			switch(m_Tape.charAt(ip)){
 			case '>':
 				// Increment data pointer
@@ -74,28 +93,19 @@ public class Interpreter {
 				// Code inspiration and help:
 				// https://github.com/fabianm/brainfuck-java/blob/master/src/main
 				//  /java/org/fabianm/brainfuck/BrainfuckEngine.java
-				
-				if(m_Mem[dp] == 0){
-					int bc = 1;			// bracket count
-					while (bc > 0){
-						char c = (char) m_Tape.charAt(++ip);	
 
-						if (c == '[') bc++;
-						else if (c == ']') bc--;
-					}
-				}
-
-				//				if (m_Mem[dp] == 0){
-				//					++ip; // point to instruction after '['
-				//					while (m_Tape.charAt(ip) != ']'){
-				//						// nested loops
-				//						if (m_Tape.charAt(ip) == '[') 
-				//							loopStack.push(ip); // Save ip to go back to
-				//						++ip;
+				//				if(m_Mem[dp] == 0){
+				//					// Check for nested loops
+				//					int bc = 1;			// bracket count
+				//					while (bc > 0){
+				//						char c = (char) m_Tape.charAt(++ip);	
+				//
+				//						if (c == '[') bc++;
+				//						else if (c == ']') bc--;
 				//					}
 				//				}
-				//				else
-				//					loopStack.push(ip); // Save ip to go back to
+				m_Stack.push(ip); // Save ip to go back to
+				BeginLoop(ip, dp);
 				break;
 			case ']':
 				// End loop
@@ -104,25 +114,27 @@ public class Interpreter {
 				//  if the byte at the data pointer is nonzero, then instead of moving the 
 				// instruction pointer forward to the next command, jump it back to the 
 				// command after the matching [ command.
-				
+
 				// Code inspiration and help:
 				// https://github.com/fabianm/brainfuck-java/blob/master/src/main
 				//  /java/org/fabianm/brainfuck/BrainfuckEngine.java
-				int bc = 1;			// bracket count
-				while (bc > 0){
-					//System.out.printf("\n%s\n", ); // trace
-					char c = (char) m_Tape.charAt(--ip);	
+				//				int bc = 1;			// bracket count
+				//				while (bc > 0){
+				//					//System.out.printf("\n%s\n", ); // trace
+				//					char c = (char) m_Tape.charAt(--ip);	
+				//
+				//					if (c == '[') bc--;
+				//					else if (c == ']') bc++;
+				//				}
+				//				--ip;
 
-					if (c == '[') bc--;
-					else if (c == ']') bc++;
+
+				if (m_Mem[dp] != 0)
+					ip = m_Stack.peek();
+				else{
+					debugTrace(m_Tape.charAt(ip), ip, dp, m_Mem[dp]); // trace
+					m_Stack.pop();
 				}
-				--ip;
-
-
-				//				if (m_Mem[dp] != 0)
-				//					ip = loopStack.peek();
-				//				else
-				//					loopStack.pop();
 				break;
 			default:
 				// Ignore all other input

@@ -71,6 +71,10 @@ public class Interpreter {
 				// instruction pointer forward to the next command, jump it forward to 
 				// the command after the matching ] command.
 
+				// Code inspiration and help:
+				// https://github.com/fabianm/brainfuck-java/blob/master/src/main
+				//  /java/org/fabianm/brainfuck/BrainfuckEngine.java
+				
 				if(m_Mem[dp] == 0){
 					int bc = 1;			// bracket count
 					while (bc > 0){
@@ -100,8 +104,10 @@ public class Interpreter {
 				//  if the byte at the data pointer is nonzero, then instead of moving the 
 				// instruction pointer forward to the next command, jump it back to the 
 				// command after the matching [ command.
-
 				
+				// Code inspiration and help:
+				// https://github.com/fabianm/brainfuck-java/blob/master/src/main
+				//  /java/org/fabianm/brainfuck/BrainfuckEngine.java
 				int bc = 1;			// bracket count
 				while (bc > 0){
 					//System.out.printf("\n%s\n", ); // trace
